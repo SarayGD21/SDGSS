@@ -7,7 +7,7 @@
 //   - iniciarNotificaciones(uid, rol): pinta la campanita 🔔 dentro de
 //     un <div id="notifWidget"> que cada página ya tiene en su header.
 
-import { FIREBASE_READY, db, COLECCION_NOTIFICACIONES } from "./firebase-config.js";
+import { FIREBASE_READY, db, auth, COLECCION_NOTIFICACIONES } from "./firebase-config.js";
 
 let collection, getDocs, query, where, doc, updateDoc, addDoc, serverTimestamp;
 
@@ -49,6 +49,23 @@ export async function crearNotificacion({ paraUid = null, paraRol = null, tipo, 
   } catch (err) {
     console.warn('No se pudo crear la notificación:', err);
   }
+
+  // Además del aviso interno, intentamos mandarlo también como push al
+  // teléfono (Fase 12). Si esto falla (sin internet, servidor caído,
+  // corriendo en local sin /api, etc.) no debe afectar nada más: el
+  // aviso interno ya quedó guardado arriba.
+  enviarPush({ paraUid, paraRol, mensaje }).catch(() => {});
+}
+
+async function enviarPush({ paraUid, paraRol, mensaje }) {
+  const idToken = await auth.currentUser?.getIdToken?.();
+  if (!idToken) return;
+
+  await fetch('/api/enviar-push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ paraUid, paraRol, titulo: 'SGSS', mensaje })
+  });
 }
 
 // Pinta la campanita + panel desplegable dentro de #notifWidget.

@@ -1,0 +1,9 @@
+{
+  "name": "sgss",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de gestión de servicio social - función serverless para notificaciones push",
+  "dependencies": {
+    "firebase-admin": "^12.6.0"
+  }
+}

@@ -1,6 +1,7 @@
 import { FIREBASE_READY, auth, db, COLECCION_EQUIPOS } from "./firebase-config.js";
 import { protegerPagina } from "./auth-guard.js";
 import { iniciarNotificaciones } from "./notificaciones.js";
+import { iniciarPush } from "./push.js";
 
 let signOut, collection, getDocs, query, where;
 if (FIREBASE_READY) {
@@ -57,6 +58,7 @@ protegerPagina(['personal_plantel']).then(async ({ uid, datos }) => {
   if (FIREBASE_READY) {
     await cargarMisEquipos(uid);
     await iniciarNotificaciones(uid, 'personal_plantel');
+    await iniciarPush(uid, 'pushWidget');
   }
 });
 

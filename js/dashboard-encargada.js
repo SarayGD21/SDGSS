@@ -1,6 +1,7 @@
 import { FIREBASE_READY, auth, db, firebaseConfig, COLECCION_USUARIOS } from "./firebase-config.js";
 import { protegerPagina } from "./auth-guard.js";
 import { iniciarNotificaciones } from "./notificaciones.js";
+import { iniciarPush } from "./push.js";
 
 let signOut, initializeApp, getAuth, createUserWithEmailAndPassword;
 let collection, getDocs, query, where, setDoc, doc, updateDoc, serverTimestamp, orderBy;
@@ -218,6 +219,7 @@ protegerPagina(['encargada']).then(async ({ uid, datos }) => {
     await cargarDisponibles();
     await cargarPersonal();
     await iniciarNotificaciones(uid, 'encargada');
+    await iniciarPush(uid, 'pushWidget');
   }
 });
 

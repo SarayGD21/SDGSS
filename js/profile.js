@@ -2,6 +2,7 @@
 import { FIREBASE_READY, auth, db, COLECCION_USUARIOS } from "./firebase-config.js";
 import { protegerPagina } from "./auth-guard.js";
 import { iniciarNotificaciones } from "./notificaciones.js";
+import { iniciarPush } from "./push.js";
 
 
 let onAuthStateChanged, signOut, doc, getDoc, updateDoc;
@@ -181,5 +182,6 @@ if (!FIREBASE_READY) {
     pintarAvatar(datos.fotoBase64 || null, datos.nombre || '');
     mostrarContenido();
     await iniciarNotificaciones(uid, 'alumno_servicio');
+    await iniciarPush(uid, 'pushWidget');
   });
 }
