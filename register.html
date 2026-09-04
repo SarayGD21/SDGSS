@@ -463,7 +463,7 @@
 
       <div class="form-head">
         <h2>Crear cuenta</h2>
-        <p>¿Ya tienes cuenta? <a href="#">Inicia sesión aquí</a></p>
+        <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión aquí</a></p>
       </div>
 
       <div class="success-banner" id="successBanner">
@@ -560,103 +560,7 @@
 
 </div>
 
-<script>
-  const form = document.getElementById('registerForm');
-  const pw = document.getElementById('password');
-  const pw2 = document.getElementById('password2');
-  const matchMsg = document.getElementById('matchMsg');
-  const strengthBars = document.querySelectorAll('#strengthBars i');
-  const strengthLabel = document.getElementById('strengthLabel');
-  const successBanner = document.getElementById('successBanner');
-
-  // Mostrar / ocultar contraseña
-  document.querySelectorAll('.toggle-pw').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = document.getElementById(btn.dataset.target);
-      const isPw = target.type === 'password';
-      target.type = isPw ? 'text' : 'password';
-      btn.setAttribute('aria-label', isPw ? 'Ocultar contraseña' : 'Mostrar contraseña');
-      btn.querySelector('.eye').style.opacity = isPw ? '0.55' : '1';
-    });
-  });
-
-  function setError(field, hasError){
-    const el = document.querySelector(`[data-field="${field}"]`);
-    el.classList.toggle('error', hasError);
-  }
-
-  function scorePassword(value){
-    let score = 0;
-    if(value.length >= 8) score++;
-    if(/[A-Z]/.test(value)) score++;
-    if(/[0-9]/.test(value)) score++;
-    if(/[^A-Za-z0-9]/.test(value)) score++;
-    return score;
-  }
-
-  const labels = ['Muy débil', 'Débil', 'Aceptable', 'Fuerte'];
-  const colors = ['#ff6b6b', '#ffb85c', '#c9dc3d', '#3ddc84'];
-
-  pw.addEventListener('input', () => {
-    const score = pw.value.length ? Math.max(scorePassword(pw.value), 1) : 0;
-    strengthBars.forEach((bar, i) => {
-      bar.style.background = i < score ? colors[score - 1] : 'var(--green-line)';
-    });
-    strengthLabel.textContent = pw.value.length
-      ? labels[score - 1] || labels[0]
-      : 'Usa mayúsculas, números y símbolos para mayor seguridad.';
-    checkMatch();
-  });
-
-  function checkMatch(){
-    if(!pw2.value){
-      matchMsg.className = 'match-msg';
-      return;
-    }
-    const ok = pw.value === pw2.value;
-    matchMsg.textContent = ok ? 'Las contraseñas coinciden.' : 'Las contraseñas no coinciden todavía.';
-    matchMsg.className = 'match-msg show ' + (ok ? 'ok' : 'bad');
-  }
-  pw2.addEventListener('input', checkMatch);
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    successBanner.classList.remove('show');
-
-    const nombre = document.getElementById('nombre');
-    const institucion = document.getElementById('institucion');
-    const carrera = document.getElementById('carrera');
-    const correo = document.getElementById('correo');
-
-    let valid = true;
-
-    const nombreOk = nombre.value.trim().length >= 3;
-    setError('nombre', !nombreOk); if(!nombreOk) valid = false;
-
-    const instOk = institucion.value.trim().length >= 3;
-    setError('institucion', !instOk); if(!instOk) valid = false;
-
-    const carreraOk = carrera.value !== '';
-    setError('carrera', !carreraOk); if(!carreraOk) valid = false;
-
-    const correoOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.value.trim());
-    setError('correo', !correoOk); if(!correoOk) valid = false;
-
-    const pwOk = pw.value.length >= 8;
-    setError('password', !pwOk); if(!pwOk) valid = false;
-
-    const pw2Ok = pwOk && pw.value === pw2.value && pw2.value.length > 0;
-    setError('password2', !pw2Ok); if(!pw2Ok) valid = false;
-
-    if(valid){
-      successBanner.classList.add('show');
-      successBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-      const firstError = document.querySelector('.field.error');
-      if(firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  });
-</script>
+<script type="module" src="js/register.js"></script>
 
 </body>
 </html>

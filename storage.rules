@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function estaAutenticado() {
+      return request.auth != null;
+    }
+
+    // Igual que en firestore.rules: consultamos el rol real del usuario
+    // en su documento de Firestore, nunca confiamos en el cliente.
+    function rolDe(uid) {
+      return firestore.exists(/databases/(default)/documents/usuarios/$(uid))
+        ? firestore.get(/databases/(default)/documents/usuarios/$(uid)).data.rol
+        : null;
+    }
+
+    function esEncargada() {
+      return estaAutenticado() && rolDe(request.auth.uid) == 'encargada';
+    }
+
+    function esPersonal() {
+      return estaAutenticado() && rolDe(request.auth.uid) == 'personal_plantel';
+    }
+
+    // Fotos de equipos: equipos/{equipoId}/foto.jpg
+    match /equipos/{equipoId}/{archivo} {
+      // Encargada y personal pueden ver las fotos (personal las verá en
+      // "Mis equipos" en la Fase 5).
+      allow read: if esEncargada() || esPersonal();
+
+      // Solo la encargada puede subir o reemplazar fotos de equipos,
+      // y solo si es una imagen de máximo 5 MB.
+      allow write: if esEncargada()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Evidencia de solicitudes: solicitudes/{solicitudId}/evidencia.jpg
+    match /solicitudes/{solicitudId}/{archivo} {
+      // Encargada y personal pueden ver la evidencia adjunta.
+      allow read: if esEncargada() || esPersonal();
+
+      // Cualquier personal autenticado puede subir la evidencia de una
+      // solicitud (no sabemos el dueño desde Storage sin otra consulta),
+      // limitada a imágenes de máximo 5 MB.
+      allow write: if esPersonal()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Todo lo demás bloqueado por ahora.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

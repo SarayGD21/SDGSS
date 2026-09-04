@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGSS · Mi perfil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-black: #0a0f0c;
+    --bg-panel: #0f1712;
+    --green-deep: #123524;
+    --green-mid: #1c5c3a;
+    --green-bright: #3ddc84;
+    --green-line: #234531;
+    --text-main: #eef3ef;
+    --text-muted: #8fa397;
+    --text-faint: #5c7267;
+    --danger: #ff6b6b;
+    --ok: #3ddc84;
+    --warn: #ffb85c;
+    --radius: 14px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+  body{
+    background: var(--bg-black);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a{ color: inherit; }
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--green-line);
+    background: var(--bg-panel);
+  }
+  .header-brand{ display:flex; align-items:center; gap:12px; }
+  .logo-mark{
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: #fff;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .logo-mark img{ width:100%; height:100%; object-fit:contain; }
+  .header-brand .name{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size: 14px;
+    line-height:1.25;
+  }
+  .header-brand .name span{
+    display:block;
+    font-weight:400;
+    font-size:11.5px;
+    color: var(--text-muted);
+  }
+  .logout-btn{
+    background: transparent;
+    border: 1.5px solid var(--green-line);
+    color: var(--text-muted);
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .logout-btn:hover{ border-color: var(--danger); color: var(--danger); }
+
+  main{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 44px 24px 60px;
+  }
+
+  #loadingState{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    padding: 80px 0;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .spinner{
+    width: 30px; height:30px;
+    border-radius:50%;
+    border: 3px solid var(--green-line);
+    border-top-color: var(--green-bright);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  #profileContent{ display:none; }
+  #profileContent.show{ display:block; }
+
+  .page-head{ margin-bottom: 28px; }
+  .page-head h1{
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight:600;
+    margin: 0 0 6px;
+  }
+  .page-head p{
+    color: var(--text-muted);
+    font-size: 14.5px;
+    margin:0;
+  }
+
+  .avatar-row{
+    display:flex;
+    align-items:center;
+    gap: 20px;
+    background: var(--bg-panel);
+    border: 1px solid var(--green-line);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin-bottom: 22px;
+  }
+  .avatar-wrap{
+    position: relative;
+    width: 84px; height: 84px;
+    flex-shrink:0;
+  }
+  #avatarImg{
+    width:100%; height:100%;
+    border-radius:50%;
+    object-fit:cover;
+    background: var(--green-deep);
+    border: 2px solid var(--green-line);
+    display:block;
+  }
+  .avatar-placeholder{
+    width:100%; height:100%;
+    border-radius:50%;
+    background: var(--green-deep);
+    border: 2px solid var(--green-line);
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size: 26px;
+    color: var(--green-bright);
+  }
+  .avatar-edit-btn{
+    position:absolute;
+    bottom: -2px; right: -2px;
+    width: 30px; height:30px;
+    border-radius:50%;
+    background: var(--green-bright);
+    border: 2px solid var(--bg-panel);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    color: #06110b;
+  }
+  .avatar-edit-btn svg{ width:14px; height:14px; }
+  .avatar-info{ flex:1; min-width:0; }
+  .avatar-info .label{
+    font-weight:600;
+    font-size: 14.5px;
+    margin-bottom: 4px;
+  }
+  .avatar-info .hint{
+    font-size: 12.5px;
+    color: var(--text-faint);
+    line-height:1.5;
+  }
+  #fileInput{ display:none; }
+
+  .card{
+    background: var(--bg-panel);
+    border: 1px solid var(--green-line);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  form{ display:flex; flex-direction:column; gap:18px; }
+  .field{ display:flex; flex-direction:column; gap:7px; }
+  .field label{
+    font-size:13.5px;
+    font-weight:600;
+  }
+  .field .hint{
+    font-size:12px;
+    color: var(--text-faint);
+    font-weight:400;
+  }
+  input, select{
+    width:100%;
+    background: var(--bg-black);
+    border: 1.5px solid var(--green-line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text-main);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    outline:none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input:focus, select:focus{
+    border-color: var(--green-bright);
+    box-shadow: 0 0 0 3px rgba(61,220,132,0.14);
+  }
+  input:disabled{
+    opacity:0.55;
+    cursor:not-allowed;
+  }
+  select{ cursor:pointer; }
+
+  .save-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top: 6px;
+  }
+  .save-btn{
+    background: linear-gradient(180deg, var(--green-bright), var(--green-mid));
+    color: #06110b;
+    border:none;
+    padding: 13px 22px;
+    border-radius: 10px;
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size: 14.5px;
+    cursor:pointer;
+    transition: transform .12s ease, opacity .15s ease;
+  }
+  .save-btn:hover{ transform: translateY(-1px); }
+  .save-btn:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
+
+  .save-msg{
+    font-size: 13px;
+    display:none;
+    align-items:center;
+    gap:6px;
+  }
+  .save-msg.show{ display:flex; }
+  .save-msg.ok{ color: var(--ok); }
+  .save-msg.bad{ color: var(--danger); }
+
+  .badge{ display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.02em; flex-shrink:0; }
+  .badge-asignada{ background:rgba(94,166,255,0.15); color:#5ea6ff; }
+  .badge-aceptada{ background:rgba(255,184,92,0.18); color:var(--warn); }
+  .badge-en_proceso{ background:rgba(255,184,92,0.18); color:var(--warn); }
+  .badge-completada{ background:rgba(61,220,132,0.15); color:var(--ok); }
+  .badge-verificada{ background:rgba(150,150,255,0.18); color:#a5a5ff; }
+  .actividad-row{ background:var(--bg-black); border:1px solid var(--green-line); border-radius:12px; padding:14px 16px; }
+  .btn-mini{ background:transparent; border:1.5px solid var(--green-line); color:var(--text-muted); padding:9px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:var(--font-body); }
+  .btn-mini.activar{ border-color:var(--green-bright); color:var(--green-bright); }
+
+  .banner{
+    display:none;
+    align-items:center;
+    gap:10px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    margin-bottom: 22px;
+  }
+  .banner.show{ display:flex; }
+  .banner.warn{
+    background: rgba(255,184,92,0.1);
+    border: 1px solid rgba(255,184,92,0.35);
+    color: var(--warn);
+  }
+
+  @media (max-width: 560px){
+    header{ padding: 16px 18px; }
+    main{ padding: 30px 16px 50px; }
+    .avatar-row{ flex-direction:column; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="logo-mark"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='11' fill='%233ddc84'/></svg>" alt="Logo Conalep"></div>
+    <div class="name">CONALEP<span>Sistema de Gestión de Servicio Social</span></div>
+  </div>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div id="notifWidget"></div>
+    <button class="logout-btn" id="logoutBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Cerrar sesión
+    </button>
+  </div>
+</header>
+
+<main>
+  <div id="loadingState">
+    <div class="spinner"></div>
+    <span>Cargando tu perfil...</span>
+  </div>
+
+  <div id="profileContent">
+    <div class="page-head">
+      <h1>Mi perfil</h1>
+      <p>Aquí puedes actualizar tu foto y tus datos personales.</p>
+    </div>
+
+    <div class="banner warn" id="configBanner">
+      Firebase aún no está conectado. Configura <code>/js/firebase-config.js</code> para activar el guardado real.
+    </div>
+
+    <div class="avatar-row">
+      <div class="avatar-wrap">
+        <img id="avatarImg" style="display:none;" alt="Foto de perfil">
+        <div class="avatar-placeholder" id="avatarPlaceholder">?</div>
+        <div class="avatar-edit-btn" id="avatarEditBtn" title="Cambiar foto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      <div class="avatar-info">
+        <div class="label">Foto de perfil</div>
+        <div class="hint">Toca el ícono del lápiz para elegir una foto desde tu dispositivo. Se ajustará automáticamente.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="profileForm">
+        <div class="field">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" required>
+        </div>
+
+        <div class="field">
+          <label for="institucion">Institución / Plantel</label>
+          <input type="text" id="institucion" required>
+        </div>
+
+        <div class="field">
+          <label for="carrera">Carrera / Área</label>
+          <select id="carrera" required>
+            <option value="" disabled>Selecciona tu carrera o área</option>
+            <option>Informática</option>
+            <option>Contabilidad</option>
+            <option>Redes</option>
+            <option>Mecatrónica</option>
+            <option>Administración</option>
+            <option>Mantenimiento Automotriz</option>
+            <option>Electromecánica Industrial</option>
+            <option>Construcción</option>
+            <option>Mercadotecnia</option>
+            <option>Otra</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="correo">Correo electrónico <span class="hint">(no se puede cambiar aquí)</span></label>
+          <input type="email" id="correo" disabled>
+        </div>
+
+        <div class="save-row">
+          <button type="submit" class="save-btn" id="saveBtn">Guardar cambios</button>
+          <span class="save-msg" id="saveMsg"></span>
+        </div>
+      </form>
+    </div>
+        <div class="card" style="margin-top:20px;">
+      <h2 style="font-family:var(--font-display); font-size:19px; margin:0 0 4px;">Disponibilidad</h2>
+      <p style="color:var(--text-muted); font-size:13.5px; margin:0 0 18px;">Indica cuándo estás disponible para actividades de servicio social.</p>
+
+      <form id="disponibilidadForm">
+        <div class="field">
+          <label for="dispFecha">Fecha</label>
+          <input type="date" id="dispFecha" required>
+        </div>
+        <div style="display:flex; gap:14px;">
+          <div class="field" style="flex:1;">
+            <label for="dispInicio">Hora de inicio</label>
+            <input type="time" id="dispInicio" required>
+          </div>
+          <div class="field" style="flex:1;">
+            <label for="dispFin">Hora de finalización</label>
+            <input type="time" id="dispFin" required>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
+          <label style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; cursor:pointer;">
+            <input type="checkbox" id="dispActivo" style="width:18px; height:18px; accent-color:var(--green-bright);">
+            Disponible / En línea
+          </label>
+          <span id="dispEstadoTexto" style="font-size:13px; color:var(--text-faint);">Inactivo</span>
+        </div>
+
+        <div class="save-row">
+          <button type="submit" class="save-btn" id="dispGuardarBtn">Guardar disponibilidad</button>
+          <span class="save-msg" id="dispSaveMsg"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h2 style="font-family:var(--font-display); font-size:19px; margin:0 0 4px;">Mis actividades</h2>
+      <p style="color:var(--text-muted); font-size:13.5px; margin:0 0 18px;">Actividades que la encargada te ha asignado.</p>
+      <div id="listaMisActividades" style="display:flex; flex-direction:column; gap:10px;">
+        <p style="color:var(--text-muted); font-size:14px;">Cargando...</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="js/profile.js"></script>
+<script type="module" src="js/disponibilidad.js"></script>
+<script type="module" src="js/mis-actividades.js"></script>
+</body>
+</html>

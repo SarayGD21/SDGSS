@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGSS · Panel del personal</title>
+<style>
+  :root{
+    --bg-black:#0a0f0c; --bg-panel:#0f1712; --green-line:#234531;
+    --green-bright:#3ddc84; --text-main:#eef3ef;
+    --text-muted:#8fa397; --text-faint:#5c7267; --danger:#ff6b6b;
+        --radius:14px; --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif;
+    --green-mid:#1c5c3a; --ok:#3ddc84;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:var(--font-body); background:var(--bg-black); color:var(--text-main); }
+  header{ display:flex; justify-content:space-between; align-items:center; padding:20px 32px; border-bottom:1px solid var(--green-line); }
+  main{ max-width:720px; margin:0 auto; padding:32px 24px 60px; }
+  h1{ font-family:var(--font-display); font-size:20px; margin:0 0 4px; }
+  h2{ font-family:var(--font-display); font-size:18px; margin:28px 0 4px; }
+  .hint{ color:var(--text-muted); font-size:13.5px; margin:0 0 16px; }
+  button{ cursor:pointer; font-family:inherit; }
+  .logout-btn{ background:transparent; border:1.5px solid var(--green-line); color:var(--text-muted); padding:9px 16px; border-radius:999px; font-size:13px; font-weight:600; }
+  .logout-btn:hover{ border-color:var(--danger); color:var(--danger); }
+  .equipo-row{ background:var(--bg-panel); border:1px solid var(--green-line); border-radius:12px; padding:14px 16px; display:flex; gap:14px; align-items:center; margin-bottom:10px; }
+  .equipo-foto{ width:56px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+  .equipo-foto-placeholder{ width:56px; height:56px; border-radius:8px; background:var(--bg-black); border:1px solid var(--green-line); color:var(--text-faint); font-size:11px; display:flex; align-items:center; justify-content:center; text-align:center; flex-shrink:0; }
+    .card{ background:var(--bg-panel); border:1px solid var(--green-line); border-radius:var(--radius); padding:22px; }
+  .field{ display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
+  .field label{ font-size:13.5px; font-weight:600; }
+  .field .hint{ font-size:12px; color:var(--text-faint); font-weight:400; }
+  input, select, textarea{ width:100%; background:var(--bg-black); border:1.5px solid var(--green-line); border-radius:10px; padding:11px 13px; color:var(--text-main); font-family:var(--font-body); font-size:14px; outline:none; }
+  textarea{ resize:vertical; min-height:70px; }
+  input:focus, select:focus, textarea:focus{ border-color:var(--green-bright); }
+  .save-row{ display:flex; align-items:center; gap:14px; margin-top:6px; }
+  .save-btn{ background:linear-gradient(180deg,var(--green-bright),var(--green-mid)); color:#06110b; border:none; padding:12px 20px; border-radius:10px; font-family:var(--font-display); font-weight:700; font-size:14px; }
+  .save-btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .save-msg{ font-size:13px; display:none; }
+  .save-msg.show{ display:inline; }
+  .save-msg.ok{ color:var(--green-bright); }
+  .save-msg.bad{ color:var(--danger); }
+  .solicitud-row{ background:var(--bg-panel); border:1px solid var(--green-line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .badge{ display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.02em; flex-shrink:0; }
+  .badge-pendiente{ background:rgba(255,193,7,0.15); color:#ffc107; }
+  .badge-aprobada{ background:rgba(61,220,132,0.15); color:#3ddc84; }
+  .badge-rechazada{ background:rgba(255,107,107,0.15); color:#ff6b6b; }
+  .badge-asignada{ background:rgba(94,166,255,0.15); color:#5ea6ff; }
+  .badge-aceptada{ background:rgba(255,184,92,0.18); color:#ffb85c; }
+  .badge-en_proceso{ background:rgba(255,184,92,0.18); color:#ffb85c; }
+  .badge-completada{ background:rgba(61,220,132,0.15); color:#3ddc84; }
+  .badge-verificada{ background:rgba(150,150,255,0.18); color:#a5a5ff; }
+</style>
+</head>
+<body>
+<header>
+  <strong>SGSS · Personal del plantel</strong>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div id="notifWidget"></div>
+    <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
+  </div>
+</header>
+<main>
+  <h1>Bienvenido</h1>
+  <p id="saludo" style="color:var(--text-muted);">Cargando...</p>
+
+  <h2>Mis equipos</h2>
+  <p class="hint">Equipos del plantel asociados a tu cuenta. Solo la encargada puede editar esta información.</p>
+  <div id="listaMisEquipos"></div>
+
+  <h2>Reportar problema / Solicitar actividad</h2>
+  <p class="hint">Cuéntanos qué necesitas y la encargada la recibirá para asignarla.</p>
+  <div class="card">
+    <form id="solicitudForm">
+      <div class="field">
+        <label for="solicitudTipo">Tipo de actividad</label>
+        <select id="solicitudTipo" required>
+          <option value="">Selecciona una opción...</option>
+        </select>
+        <span class="hint">Elige la categoría que mejor describa lo que necesitas.</span>
+      </div>
+      <div class="field">
+        <label for="solicitudEquipo">Equipo relacionado <span class="hint">(opcional)</span></label>
+        <select id="solicitudEquipo">
+          <option value="">No aplica / actividad general</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="solicitudDescripcion">Descripción del problema</label>
+        <textarea id="solicitudDescripcion" required></textarea>
+      </div>
+      <div class="field">
+        <label for="solicitudComentarios">Comentarios adicionales <span class="hint">(opcional)</span></label>
+        <textarea id="solicitudComentarios"></textarea>
+      </div>
+      <div class="field">
+        <label for="solicitudEvidencia">Evidencia / fotografía <span class="hint">(opcional)</span></label>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <img id="solicitudEvidenciaPreview" class="equipo-foto" style="display:none;" alt="Vista previa">
+          <div id="solicitudEvidenciaPlaceholder" class="equipo-foto-placeholder">Sin foto</div>
+          <input type="file" id="solicitudEvidencia" accept="image/*" style="width:auto;">
+        </div>
+      </div>
+      <div class="save-row">
+        <button type="submit" class="save-btn" id="solicitudGuardarBtn">Enviar solicitud</button>
+        <span class="save-msg" id="solicitudMsg"></span>
+      </div>
+    </form>
+  </div>
+
+  <h2 style="margin-top:32px;">Mis solicitudes</h2>
+  <div id="listaMisSolicitudes">
+    <p style="color:var(--text-muted); font-size:14px;">Cargando...</p>
+  </div>
+</main>
+<script type="module" src="js/dashboard-personal.js"></script>
+<script type="module" src="js/solicitudes-personal.js"></script>
+</body>
+</html>

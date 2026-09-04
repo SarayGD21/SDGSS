@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGSS · Panel de la encargada</title>
+<style>
+  :root{
+    --bg-black:#0a0f0c; --bg-panel:#0f1712; --bg-sidebar:#0c130f; --green-line:#234531;
+    --green-bright:#3ddc84; --green-mid:#1c5c3a; --text-main:#eef3ef;
+    --text-muted:#8fa397; --text-faint:#5c7267; --danger:#ff6b6b; --ok:#3ddc84;
+    --radius:14px; --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif;
+    --sidebar-w:240px;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:var(--font-body); background:var(--bg-black); color:var(--text-main); }
+  button{ cursor:pointer; font-family:inherit; }
+
+  /* ---------- Layout general ---------- */
+  .app{ display:flex; min-height:100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:var(--sidebar-w); flex-shrink:0; background:var(--bg-sidebar);
+    border-right:1px solid var(--green-line); display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh;
+  }
+  .sidebar-brand{ padding:24px 22px 18px; border-bottom:1px solid var(--green-line); }
+  .sidebar-brand strong{ font-family:var(--font-display); font-size:18px; display:block; }
+  .sidebar-brand span{ font-size:12px; color:var(--text-faint); }
+  .sidebar-nav{ flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:4px; }
+  .nav-item{
+    display:flex; align-items:center; gap:12px; background:transparent; border:none;
+    color:var(--text-muted); padding:11px 14px; border-radius:10px; font-size:14px;
+    font-weight:600; text-align:left; width:100%; transition:background .15s, color .15s;
+  }
+  .nav-item .ico{ width:18px; height:18px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .nav-item:hover{ background:rgba(61,220,132,0.08); color:var(--text-main); }
+  .nav-item.active{ background:rgba(61,220,132,0.14); color:var(--green-bright); }
+  .nav-item.active .ico svg{ stroke:var(--green-bright); }
+  .sidebar-foot{ padding:16px 12px 20px; border-top:1px solid var(--green-line); }
+
+  /* ---------- Área principal ---------- */
+  .main-area{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:20px 32px; border-bottom:1px solid var(--green-line); background:var(--bg-panel);
+    position:sticky; top:0; z-index:5;
+  }
+  .topbar-title{ font-family:var(--font-display); font-size:20px; margin:0; }
+  .topbar-sub{ margin:2px 0 0; font-size:13px; color:var(--text-muted); }
+  main{ max-width:760px; width:100%; margin:0 auto; padding:32px 24px 60px; }
+
+  .section{ display:none; }
+  .section.active{ display:block; }
+
+  h2{ font-family:var(--font-display); font-size:19px; margin:0 0 4px; }
+  .section-hint{ color:var(--text-muted); font-size:13.5px; margin:0 0 16px; }
+
+  .logout-btn{ background:transparent; border:1.5px solid var(--green-line); color:var(--text-muted); padding:9px 16px; border-radius:999px; font-size:13px; font-weight:600; }
+  .logout-btn:hover{ border-color:var(--danger); color:var(--danger); }
+  .logout-btn-side{ width:100%; }
+
+  .card{ background:var(--bg-panel); border:1px solid var(--green-line); border-radius:var(--radius); padding:22px; }
+  .field{ display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
+  .field label{ font-size:13.5px; font-weight:600; }
+  .field .hint{ font-size:12px; color:var(--text-faint); font-weight:400; }
+  input{ width:100%; background:var(--bg-black); border:1.5px solid var(--green-line); border-radius:10px; padding:11px 13px; color:var(--text-main); font-family:var(--font-body); font-size:14px; outline:none; }
+  input:focus{ border-color:var(--green-bright); }
+  .save-row{ display:flex; align-items:center; gap:14px; margin-top:6px; }
+  .save-btn{ background:linear-gradient(180deg,var(--green-bright),var(--green-mid)); color:#06110b; border:none; padding:12px 20px; border-radius:10px; font-family:var(--font-display); font-weight:700; font-size:14px; }
+  .save-btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .save-msg{ font-size:13px; display:none; }
+  .save-msg.show{ display:inline; }
+  .save-msg.ok{ color:var(--ok); }
+  .save-msg.bad{ color:var(--danger); }
+  .persona-row{ background:var(--bg-panel); border:1px solid var(--green-line); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
+  .persona-row.inactivo{ opacity:0.55; }
+  .persona-fila-inputs{ display:flex; gap:8px; flex-wrap:wrap; }
+  .persona-fila-inputs input{ flex:1; min-width:120px; padding:8px 10px; font-size:13px; }
+  .persona-acciones{ display:flex; gap:8px; align-items:center; }
+  .btn-mini{ background:transparent; border:1.5px solid var(--green-line); color:var(--text-muted); padding:7px 12px; border-radius:8px; font-size:12.5px; }
+  .btn-mini.guardar{ border-color:var(--green-bright); color:var(--green-bright); }
+  .btn-mini.desactivar{ border-color:var(--danger); color:var(--danger); }
+  .btn-mini.activar{ border-color:var(--ok); color:var(--ok); }
+  .equipo-row{ background:var(--bg-panel); border:1px solid var(--green-line); border-radius:12px; padding:14px 16px; display:flex; gap:14px; align-items:flex-start; }
+  .equipo-foto{ width:64px; height:64px; border-radius:10px; object-fit:cover; background:var(--bg-black); border:1px solid var(--green-line); flex-shrink:0; }
+  .equipo-foto-placeholder{ width:64px; height:64px; border-radius:10px; background:var(--bg-black); border:1px solid var(--green-line); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:11px; text-align:center; }
+  select{ width:100%; background:var(--bg-black); border:1.5px solid var(--green-line); border-radius:10px; padding:11px 13px; color:var(--text-main); font-family:var(--font-body); font-size:14px; outline:none; }
+  select:focus{ border-color:var(--green-bright); }
+    .badge{ display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.02em; flex-shrink:0; }
+  .badge-pendiente{ background:rgba(255,193,7,0.15); color:#ffc107; }
+  .badge-aprobada{ background:rgba(61,220,132,0.15); color:#3ddc84; }
+  .badge-rechazada{ background:rgba(255,107,107,0.15); color:#ff6b6b; }
+  .badge-asignada{ background:rgba(94,166,255,0.15); color:#5ea6ff; }
+  .badge-aceptada{ background:rgba(255,184,92,0.18); color:#ffb85c; }
+  .badge-en_proceso{ background:rgba(255,184,92,0.18); color:#ffb85c; }
+  .badge-completada{ background:rgba(61,220,132,0.15); color:#3ddc84; }
+  .badge-verificada{ background:rgba(150,150,255,0.18); color:#a5a5ff; }
+  .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; z-index:50; }
+  .modal-box{ background:var(--bg-panel); border:1px solid var(--green-line); border-radius:var(--radius); padding:24px; max-width:560px; width:100%; }
+  .alumno-check-row{ display:flex; align-items:center; gap:10px; background:var(--bg-black); border:1px solid var(--green-line); border-radius:10px; padding:10px 12px; font-size:13.5px; }
+  .alumno-check-row input{ width:auto; }
+  .equipo-detalle{ display:flex; gap:14px; align-items:flex-start; background:var(--bg-black); border:1px solid var(--green-line); border-radius:10px; padding:12px 14px; }
+  textarea{ width:100%; background:var(--bg-black); border:1.5px solid var(--green-line); border-radius:10px; padding:11px 13px; color:var(--text-main); font-family:var(--font-body); font-size:14px; outline:none; resize:vertical; min-height:70px; }
+  textarea:focus{ border-color:var(--green-bright); }
+
+  /* ---------- Sidebar en móvil ---------- */
+  .menu-toggle{ display:none; background:transparent; border:1.5px solid var(--green-line); color:var(--text-main); border-radius:8px; padding:8px 10px; }
+  @media (max-width: 860px){
+    .sidebar{
+      position:fixed; left:0; top:0; height:100vh; z-index:20;
+      transform:translateX(-100%); transition:transform .2s ease;
+    }
+    .sidebar.open{ transform:translateX(0); box-shadow:0 0 0 100vmax rgba(0,0,0,0.5); }
+    .menu-toggle{ display:inline-flex; }
+    main{ padding:24px 18px 60px; }
+    .topbar{ padding:16px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ---------- Barra lateral ---------- -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <strong>SGSS</strong>
+      <span>Panel de la encargada</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-section="inicio">
+        <span class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></span>
+        Inicio
+      </button>
+      <button class="nav-item" data-section="personal">
+        <span class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span>
+        Personal
+      </button>
+      <button class="nav-item" data-section="equipos">
+        <span class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></span>
+        Equipos
+      </button>
+      <button class="nav-item" data-section="solicitudes">
+        <span class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8h6M9 12h6M9 16h4"/><rect x="4" y="3" width="16" height="18" rx="2"/></svg></span>
+        Solicitudes
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="logout-btn logout-btn-side" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- ---------- Área principal ---------- -->
+  <div class="main-area">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div>
+          <p class="topbar-title" id="topbarTitle">Inicio</p>
+          <p class="topbar-sub" id="saludo">Cargando...</p>
+        </div>
+      </div>
+      <div id="notifWidget"></div>
+    </header>
+
+    <main>
+
+      <!-- ---------- Sección: Inicio ---------- -->
+      <section class="section active" id="section-inicio">
+        <h2>Alumnos disponibles</h2>
+        <p class="section-hint">Alumnos de servicio social con disponibilidad vigente en este momento.</p>
+        <div id="listaDisponibles" style="display:flex; flex-direction:column; gap:10px;">
+          <p style="color:var(--text-muted); font-size:14px;">Cargando...</p>
+        </div>
+      </section>
+
+      <!-- ---------- Sección: Personal ---------- -->
+      <section class="section" id="section-personal">
+        <h2>Registrar personal del plantel</h2>
+        <p class="section-hint">Da de alta una nueva cuenta de personal.</p>
+        <div class="card">
+          <form id="personalForm">
+            <div class="field">
+              <label for="personalNombre">Nombre completo</label>
+              <input type="text" id="personalNombre" required>
+            </div>
+            <div class="field">
+              <label for="personalCorreo">Correo institucional</label>
+              <input type="email" id="personalCorreo" required>
+            </div>
+            <div style="display:flex; gap:14px;">
+              <div class="field" style="flex:1;">
+                <label for="personalArea">Área</label>
+                <input type="text" id="personalArea" required>
+              </div>
+              <div class="field" style="flex:1;">
+                <label for="personalPuesto">Puesto</label>
+                <input type="text" id="personalPuesto" required>
+              </div>
+            </div>
+            <div class="field">
+              <label for="personalTelefono">Teléfono <span class="hint">(opcional)</span></label>
+              <input type="text" id="personalTelefono">
+            </div>
+            <div class="field">
+              <label for="personalPassword">Contraseña temporal</label>
+              <input type="text" id="personalPassword" required minlength="8">
+              <span class="hint">Compártela con la persona; podrá cambiarla después de iniciar sesión (esa función se agrega en una fase posterior).</span>
+            </div>
+            <div class="save-row">
+              <button type="submit" class="save-btn" id="personalCrearBtn">Crear cuenta de personal</button>
+              <span class="save-msg" id="personalMsg"></span>
+            </div>
+          </form>
+        </div>
+
+        <h2 style="margin-top:36px;">Personal registrado</h2>
+        <div id="listaPersonal" style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+          <p style="color:var(--text-muted); font-size:14px;">Cargando personal...</p>
+        </div>
+      </section>
+
+      <!-- ---------- Sección: Equipos ---------- -->
+      <section class="section" id="section-equipos">
+        <h2>Registrar equipo</h2>
+        <p class="section-hint">Da de alta un nuevo equipo del plantel.</p>
+        <div class="card">
+          <form id="equipoForm">
+            <div class="field">
+              <label for="equipoFoto">Fotografía <span class="hint">(opcional)</span></label>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <img id="equipoFotoPreview" class="equipo-foto" style="display:none;" alt="Vista previa">
+                <div id="equipoFotoPlaceholder" class="equipo-foto-placeholder">Sin foto</div>
+                <input type="file" id="equipoFoto" accept="image/*" style="width:auto;">
+              </div>
+            </div>
+            <div style="display:flex; gap:14px;">
+              <div class="field" style="flex:1;">
+                <label for="equipoMarca">Marca</label>
+                <input type="text" id="equipoMarca" required>
+              </div>
+              <div class="field" style="flex:1;">
+                <label for="equipoModelo">Modelo</label>
+                <input type="text" id="equipoModelo" required>
+              </div>
+            </div>
+            <div style="display:flex; gap:14px;">
+              <div class="field" style="flex:1;">
+                <label for="equipoMarbete">Número de marbete</label>
+                <input type="text" id="equipoMarbete" required>
+              </div>
+              <div class="field" style="flex:1;">
+                <label for="equipoNumeroMaquina">Número de máquina</label>
+                <input type="text" id="equipoNumeroMaquina">
+              </div>
+            </div>
+            <div class="field">
+              <label for="equipoUbicacion">Laboratorio o ubicación</label>
+              <input type="text" id="equipoUbicacion" required>
+            </div>
+            <div class="field">
+              <label for="equipoResponsable">Responsable / persona asociada</label>
+              <select id="equipoResponsable" required>
+                <option value="">Selecciona una opción...</option>
+              </select>
+              <span class="hint">Solo aparece personal ya registrado en "Personal del plantel".</span>
+            </div>
+            <div class="field">
+              <label for="equipoObservaciones">Observaciones <span class="hint">(opcional)</span></label>
+              <textarea id="equipoObservaciones"></textarea>
+            </div>
+            <div class="save-row">
+              <button type="submit" class="save-btn" id="equipoGuardarBtn">Registrar equipo</button>
+              <span class="save-msg" id="equipoMsg"></span>
+            </div>
+          </form>
+        </div>
+
+        <h2 style="margin-top:32px;">Equipos registrados</h2>
+        <div class="field" style="margin-top:14px;">
+          <input type="text" id="equipoBuscar" placeholder="Buscar por número de marbete...">
+        </div>
+        <div id="listaEquipos" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">
+          <p style="color:var(--text-muted); font-size:14px;">Cargando equipos...</p>
+        </div>
+      </section>
+
+      <!-- ---------- Sección: Solicitudes ---------- -->
+      <section class="section" id="section-solicitudes">
+        <h2>Crear actividad</h2>
+        <p class="section-hint">Crea una actividad directamente, sin esperar a que el personal la solicite.</p>
+        <div class="card">
+          <form id="actividadForm">
+            <div class="field">
+              <label for="actividadTipo">Tipo de actividad</label>
+              <select id="actividadTipo" required>
+                <option value="">Selecciona una opción...</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="actividadEquipo">Equipo relacionado <span class="hint">(opcional)</span></label>
+              <select id="actividadEquipo">
+                <option value="">No aplica / actividad general</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="actividadDescripcion">Descripción</label>
+              <textarea id="actividadDescripcion" required></textarea>
+            </div>
+            <div class="field">
+              <label for="actividadComentarios">Comentarios adicionales <span class="hint">(opcional)</span></label>
+              <textarea id="actividadComentarios"></textarea>
+            </div>
+            <div class="save-row">
+              <button type="submit" class="save-btn" id="actividadGuardarBtn">Crear actividad</button>
+              <span class="save-msg" id="actividadMsg"></span>
+            </div>
+          </form>
+        </div>
+
+        <h2 style="margin-top:32px;">Solicitudes y actividades</h2>
+        <p class="section-hint">Reportes del personal y actividades creadas directamente por ti.</p>
+        <div id="listaSolicitudesEncargada" style="display:flex; flex-direction:column; gap:10px;">
+          <p style="color:var(--text-muted); font-size:14px;">Cargando solicitudes...</p>
+        </div>
+      </section>
+
+    </main>
+
+    </main>
+  </div>
+
+  <!-- ---------- Modal: Asignar actividad ---------- -->
+  <div id="modalAsignar" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <h2 style="margin:0;">Asignar actividad</h2>
+        <button type="button" id="modalCerrarBtn" class="btn-mini">Cerrar</button>
+      </div>
+
+      <div id="modalDetalleActividad" style="margin-top:16px;"></div>
+      <div id="modalDetalleEquipo" style="margin-top:14px;"></div>
+
+      <h2 style="margin:22px 0 10px; font-size:16px;">Alumnos disponibles</h2>
+      <div id="modalListaAlumnos" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;">
+        <p style="color:var(--text-muted); font-size:13px;">Cargando...</p>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="modalIndicaciones">Indicaciones adicionales <span class="hint">(opcional)</span></label>
+        <textarea id="modalIndicaciones"></textarea>
+      </div>
+
+      <div class="save-row">
+        <button type="button" class="save-btn" id="modalAsignarBtn">Asignar actividad</button>
+        <span class="save-msg" id="modalMsg"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- Navegación entre secciones (solo interfaz, no toca Firebase) ----------
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.section');
+  const topbarTitle = document.getElementById('topbarTitle');
+  const sidebar = document.getElementById('sidebar');
+  const menuToggle = document.getElementById('menuToggle');
+
+  const titulos = {
+    inicio: 'Inicio',
+    personal: 'Personal',
+    equipos: 'Equipos',
+    solicitudes: 'Solicitudes'
+  };
+
+  function irASeccion(nombre) {
+    sections.forEach(s => s.classList.toggle('active', s.id === 'section-' + nombre));
+    navItems.forEach(b => b.classList.toggle('active', b.dataset.section === nombre));
+    topbarTitle.textContent = titulos[nombre] || 'Inicio';
+    sidebar.classList.remove('open');
+    if (history.replaceState) history.replaceState(null, '', '#' + nombre);
+  }
+
+  navItems.forEach(btn => {
+    btn.addEventListener('click', () => irASeccion(btn.dataset.section));
+  });
+
+  menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+  // Respeta el hash de la URL al cargar (ej. dashboard-encargada.html#equipos)
+  const inicial = (location.hash || '').replace('#', '');
+  if (titulos[inicial]) irASeccion(inicial);
+</script>
+<script type="module" src="js/dashboard-encargada.js"></script>
+<script type="module" src="js/equipos.js"></script>
+<script type="module" src="js/solicitudes-encargada.js"></script>
+</body>
+</html>
