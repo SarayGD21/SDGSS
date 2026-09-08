@@ -203,6 +203,24 @@ async function cargarSolicitudesEncargada() {
       fila.querySelectorAll('button').forEach(b => b.disabled = true);
       try {
         await updateDoc(doc(db, COLECCION_SOLICITUDES, id), { estado: nuevoEstado });
+
+        // Si lo que se acaba de mover es una solicitud "pendiente" que el
+        // personal del plantel envió (no una actividad que la encargada
+        // creó directamente), le avisamos que ya se respondió. Hasta ahora
+        // personal_plantel nunca recibía nada de vuelta.
+        const solicitud = solicitudesCache.find((s) => s.id === id);
+        if (solicitud && solicitud.origen === 'personal' && solicitud.creadoPorUid &&
+            (nuevoEstado === 'aprobada' || nuevoEstado === 'rechazada')) {
+          const veredicto = nuevoEstado === 'aprobada' ? 'aprobada' : 'rechazada';
+          crearNotificacion({
+            paraUid: solicitud.creadoPorUid,
+            tipo: `solicitud_${veredicto}`,
+            mensaje: `Tu solicitud "${solicitud.tipo}" fue ${veredicto}.`,
+            solicitudId: id,
+            creadaPorUid: miUid
+          });
+        }
+
         await cargarSolicitudesEncargada();
       } catch (err) {
         fila.querySelectorAll('button').forEach(b => b.disabled = false);

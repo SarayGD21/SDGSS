@@ -11,16 +11,43 @@ import { db, COLECCION_USUARIOS } from "./firebase-config.js";
 // Certificados push web). No es secreta: solo identifica el remitente.
 const VAPID_KEY = "BB1F8LfObCBpaSd1kjbym-J6Ub6QsjXfYjzW9Bf_Btr8s0Qo4stV_Fw0mkDr1QlY_f0FOA0SKcRu7OUDnBDSLxY";
 
-let getMessaging, getToken, isSupported;
+let getMessaging, getToken, isSupported, onMessage;
 let doc, updateDoc, arrayUnion;
 
+// Evita registrar el listener de primer plano más de una vez si
+// iniciarPush() llegara a correr dos veces en la misma pestaña.
+let listenerForegroundActivo = false;
+
 async function cargarLibrerias() {
-  ({ getMessaging, getToken, isSupported } = await import(
+  ({ getMessaging, getToken, isSupported, onMessage } = await import(
     "https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging.js"
   ));
   ({ doc, updateDoc, arrayUnion } = await import(
     "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"
   ));
+}
+
+// Cuando la pestaña del sistema SÍ está al frente, Firebase no pasa por
+// el service worker (por eso firebase-messaging-sw.js no basta): manda
+// el mensaje directo aquí, a la página. Si no hacemos nada con él, el
+// aviso "se pierde" para efectos de notificación visible del sistema
+// (aunque ya haya quedado guardado en Firestore por notificaciones.js).
+function activarListenerForeground(messaging) {
+  if (listenerForegroundActivo) return;
+  listenerForegroundActivo = true;
+
+  onMessage(messaging, (payload) => {
+    const titulo = (payload.notification && payload.notification.title) || 'SGSS';
+    const cuerpo = (payload.notification && payload.notification.body) || '';
+
+    if (Notification.permission !== 'granted') return;
+
+    // Se muestra vía el service worker (más consistente entre navegadores
+    // que "new Notification(...)" directo desde la página).
+    navigator.serviceWorker.ready.then((registro) => {
+      registro.showNotification(titulo, { body: cuerpo });
+    });
+  });
 }
 
 async function registrarToken(uid) {
@@ -30,6 +57,7 @@ async function registrarToken(uid) {
     const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registro });
     if (token) {
       await updateDoc(doc(db, COLECCION_USUARIOS, uid), { tokensFCM: arrayUnion(token) });
+      activarListenerForeground(messaging);
     }
     return !!token;
   } catch (err) {

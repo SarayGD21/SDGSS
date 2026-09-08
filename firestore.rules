@@ -172,11 +172,14 @@ service cloud.firestore {
         && (resource.data.paraUid == request.auth.uid
             || (resource.data.paraRol == 'encargada' && esEncargada()));
 
-      // Solo se crean notificaciones para los 3 casos de esta fase, y
-      // cada una solo la puede disparar el rol al que le corresponde:
+      // Solo se crean notificaciones para los casos ya definidos, y cada
+      // una solo la puede disparar el rol al que le corresponde:
       //   nueva_solicitud        -> la crea el personal, para la encargada.
       //   actividad_asignada     -> la crea la encargada, para un alumno.
       //   actividad_completada   -> la crea el alumno, para la encargada.
+      //   solicitud_aprobada/
+      //   solicitud_rechazada    -> la crea la encargada, para el personal
+      //                             que mandó esa solicitud (Fase 12).
       allow create:
         if request.resource.data.creadaPorUid == request.auth.uid
         && request.resource.data.leida == false
@@ -187,6 +190,9 @@ service cloud.firestore {
             && esEncargada() && request.resource.data.paraUid is string)
           || (request.resource.data.tipo == 'actividad_completada'
             && esAlumno() && request.resource.data.paraRol == 'encargada')
+          || ((request.resource.data.tipo == 'solicitud_aprobada'
+                || request.resource.data.tipo == 'solicitud_rechazada')
+            && esEncargada() && request.resource.data.paraUid is string)
         );
 
       // El único cambio permitido es marcarla como leída, y solo quien
