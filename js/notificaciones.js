@@ -9,10 +9,10 @@
 
 import { FIREBASE_READY, db, auth, COLECCION_NOTIFICACIONES } from "./firebase-config.js";
 
-let collection, getDocs, query, where, doc, updateDoc, addDoc, serverTimestamp;
+let collection, query, where, doc, updateDoc, addDoc, serverTimestamp, onSnapshot;
 
 if (FIREBASE_READY) {
-  ({ collection, getDocs, query, where, doc, updateDoc, addDoc, serverTimestamp } = await import(
+  ({ collection, query, where, doc, updateDoc, addDoc, serverTimestamp, onSnapshot } = await import(
     "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"
   ));
 }
@@ -90,22 +90,23 @@ export async function iniciarNotificaciones(uid, rol) {
   const notifPanel = document.getElementById('notifPanel');
   const notifContador = document.getElementById('notifContador');
 
-  async function cargar() {
-    const consultas = [getDocs(query(collection(db, COLECCION_NOTIFICACIONES), where('paraUid', '==', uid)))];
-    if (rol === 'encargada') {
-      consultas.push(getDocs(query(collection(db, COLECCION_NOTIFICACIONES), where('paraRol', '==', 'encargada'))));
-    }
+  // Antes esto se llenaba con getDocs() (una sola consulta, instantánea).
+  // Con onSnapshot() Firestore mantiene la conexión abierta y nos vuelve
+  // a llamar solo, sin que el usuario recargue ni reabra la campanita,
+  // cada vez que se crea/actualiza una notificación dirigida a él (o,
+  // si es encargada, al rol completo).
+  let notifsPropias = [];
+  let notifsRol = [];
+  let huboError = false;
 
-    let resultados;
-    try {
-      resultados = await Promise.all(consultas);
-    } catch (err) {
+  function repintar() {
+    if (huboError) {
       notifPanel.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:8px;">No se pudieron cargar tus notificaciones.</p>';
+      notifContador.style.display = 'none';
       return;
     }
 
-    const notifs = [];
-    resultados.forEach((snap) => snap.forEach((docSnap) => notifs.push({ id: docSnap.id, ...docSnap.data() })));
+    const notifs = [...notifsPropias, ...notifsRol];
     notifs.sort((a, b) => (b.creadaEn?.toMillis?.() || 0) - (a.creadaEn?.toMillis?.() || 0));
 
     const noLeidas = notifs.filter((n) => !n.leida).length;
@@ -130,7 +131,9 @@ export async function iniciarNotificaciones(uid, rol) {
         if (el.dataset.leida === 'true') return;
         try {
           await updateDoc(doc(db, COLECCION_NOTIFICACIONES, el.dataset.id), { leida: true });
-          await cargar();
+          // No hace falta volver a llamar nada: el propio onSnapshot de
+          // abajo va a disparar repintar() solo en cuanto Firestore
+          // confirme el cambio.
         } catch (err) {
           // No es crítico si falla marcarla como leída.
         }
@@ -138,16 +141,34 @@ export async function iniciarNotificaciones(uid, rol) {
     });
   }
 
-  notifBtn.addEventListener('click', async (e) => {
+  onSnapshot(
+    query(collection(db, COLECCION_NOTIFICACIONES), where('paraUid', '==', uid)),
+    (snap) => {
+      notifsPropias = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      huboError = false;
+      repintar();
+    },
+    () => { huboError = true; repintar(); }
+  );
+
+  if (rol === 'encargada') {
+    onSnapshot(
+      query(collection(db, COLECCION_NOTIFICACIONES), where('paraRol', '==', 'encargada')),
+      (snap) => {
+        notifsRol = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        huboError = false;
+        repintar();
+      },
+      () => { huboError = true; repintar(); }
+    );
+  }
+
+  notifBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    const abrir = notifPanel.style.display === 'none';
-    notifPanel.style.display = abrir ? 'block' : 'none';
-    if (abrir) await cargar();
+    notifPanel.style.display = notifPanel.style.display === 'none' ? 'block' : 'none';
   });
 
   document.addEventListener('click', (e) => {
     if (!contenedor.contains(e.target)) notifPanel.style.display = 'none';
   });
-
-  await cargar();
 }
