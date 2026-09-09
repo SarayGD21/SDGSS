@@ -1,9 +1,0 @@
-{
-  "name": "SGSS",
-  "short_name": "SGSS",
-  "start_url": "/profile.html",
-  "display": "standalone",
-  "background_color": "#0f1512",
-  "theme_color": "#0f1512",
-  "icons": []
-}

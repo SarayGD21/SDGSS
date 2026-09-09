@@ -90,28 +90,31 @@ export async function iniciarNotificaciones(uid, rol) {
   const notifPanel = document.getElementById('notifPanel');
   const notifContador = document.getElementById('notifContador');
 
-  // Antes esto se llenaba con getDocs() (una sola consulta, instantánea).
-  // Con onSnapshot() Firestore mantiene la conexión abierta y nos vuelve
-  // a llamar solo, sin que el usuario recargue ni reabra la campanita,
-  // cada vez que se crea/actualiza una notificación dirigida a él (o,
-  // si es encargada, al rol completo).
-  let notifsPropias = [];
-  let notifsRol = [];
+  // Guardamos por separado lo que llega de cada listener en tiempo real
+  // (mis propias notificaciones, y -si es encargada- las del rol), para
+  // poder mezclarlas cada vez que cualquiera de las dos cambie.
+  let misNotifs = [];
+  let notifsDeRol = [];
   let huboError = false;
 
-  function repintar() {
+  function render() {
     if (huboError) {
       notifPanel.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:8px;">No se pudieron cargar tus notificaciones.</p>';
       notifContador.style.display = 'none';
       return;
     }
 
-    const notifs = [...notifsPropias, ...notifsRol];
+    const notifs = [...misNotifs, ...notifsDeRol];
     notifs.sort((a, b) => (b.creadaEn?.toMillis?.() || 0) - (a.creadaEn?.toMillis?.() || 0));
 
     const noLeidas = notifs.filter((n) => !n.leida).length;
     notifContador.style.display = noLeidas > 0 ? 'flex' : 'none';
     notifContador.textContent = noLeidas > 9 ? '9+' : String(noLeidas);
+
+    // Si el panel está cerrado no hace falta repintar la lista, solo
+    // el contador de arriba (así el usuario ve al vuelo que llegó algo
+    // nuevo aunque no tenga el panel abierto).
+    if (notifPanel.style.display === 'none') return;
 
     if (notifs.length === 0) {
       notifPanel.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:8px;">No tienes notificaciones.</p>';
@@ -130,10 +133,10 @@ export async function iniciarNotificaciones(uid, rol) {
       el.addEventListener('click', async () => {
         if (el.dataset.leida === 'true') return;
         try {
+          // No hace falta volver a pintar a mano: en cuanto Firestore
+          // confirme el cambio, el propio listener en tiempo real va a
+          // disparar render() de nuevo con "leida" ya actualizado.
           await updateDoc(doc(db, COLECCION_NOTIFICACIONES, el.dataset.id), { leida: true });
-          // No hace falta volver a llamar nada: el propio onSnapshot de
-          // abajo va a disparar repintar() solo en cuanto Firestore
-          // confirme el cambio.
         } catch (err) {
           // No es crítico si falla marcarla como leída.
         }
@@ -141,31 +144,37 @@ export async function iniciarNotificaciones(uid, rol) {
     });
   }
 
+  // Escuchamos en tiempo real (onSnapshot) en lugar de solo consultar al
+  // abrir el panel: así la campanita y el contador se actualizan solos
+  // en cuanto llega un aviso nuevo, sin que el usuario tenga que hacer
+  // clic ni recargar la página.
   onSnapshot(
     query(collection(db, COLECCION_NOTIFICACIONES), where('paraUid', '==', uid)),
     (snap) => {
-      notifsPropias = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      misNotifs = snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
       huboError = false;
-      repintar();
+      render();
     },
-    () => { huboError = true; repintar(); }
+    () => { huboError = true; render(); }
   );
 
   if (rol === 'encargada') {
     onSnapshot(
       query(collection(db, COLECCION_NOTIFICACIONES), where('paraRol', '==', 'encargada')),
       (snap) => {
-        notifsRol = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        notifsDeRol = snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
         huboError = false;
-        repintar();
+        render();
       },
-      () => { huboError = true; repintar(); }
+      () => { huboError = true; render(); }
     );
   }
 
   notifBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    notifPanel.style.display = notifPanel.style.display === 'none' ? 'block' : 'none';
+    const abrir = notifPanel.style.display === 'none';
+    notifPanel.style.display = abrir ? 'block' : 'none';
+    if (abrir) render();
   });
 
   document.addEventListener('click', (e) => {
