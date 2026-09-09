@@ -39,9 +39,33 @@ function escucharEnPrimerPlano(messaging) {
   });
 }
 
+// navigator.serviceWorker.register(...) resuelve en cuanto el registro
+// EXISTE, no cuando ya está "activo". Si pedimos el token justo después
+// (sobre todo la primera vez que el usuario entra, cuando el worker
+// todavía se está instalando), el navegador tira
+// "AbortError: ... no active Service Worker". Por eso esperamos
+// explícitamente a que quede activo antes de suscribirlo al push.
+async function esperarWorkerActivo(registro) {
+  if (registro.active) return registro;
+
+  const worker = registro.installing || registro.waiting;
+  if (!worker) return registro;
+
+  await new Promise((resolve) => {
+    worker.addEventListener('statechange', function alCambiar() {
+      if (worker.state === 'activated') {
+        worker.removeEventListener('statechange', alCambiar);
+        resolve();
+      }
+    });
+  });
+  return registro;
+}
+
 async function registrarToken(uid) {
   try {
     const registro = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    await esperarWorkerActivo(registro);
     const messaging = getMessaging();
     const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registro });
     if (token) {
