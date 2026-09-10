@@ -9,17 +9,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg-black: #0a0f0c;
-    --bg-panel: #0f1712;
-    --green-deep: #123524;
-    --green-mid: #1c5c3a;
-    --green-bright: #3ddc84;
-    --green-line: #234531;
-    --text-main: #eef3ef;
-    --text-muted: #8fa397;
-    --text-faint: #5c7267;
-    --danger: #ff6b6b;
-    --ok: #3ddc84;
+    --bg-black: #eef8f2;
+    --bg-panel: #ffffff;
+    --green-deep: #0b4d29;
+    --green-mid: #0f6b39;
+    --green-bright: #15803d;
+    --green-line: #cdeedd;
+    --text-main: #16241c;
+    --text-muted: #4c6357;
+    --text-faint: #7c9488;
+    --danger: #c0362e;
+    --ok: #15803d;
     --radius: 14px;
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Inter', sans-serif;
@@ -45,11 +45,16 @@
 
   /* ---------- Panel izquierdo: identidad ---------- */
   .brand{
+    --text-main: #ffffff;
+    --text-muted: rgba(255,255,255,0.8);
+    --text-faint: rgba(255,255,255,0.6);
+    --green-line: rgba(255,255,255,0.25);
+    --green-bright: #86f0b3;
     position: relative;
     background:
-      radial-gradient(circle at 15% 20%, rgba(61,220,132,0.14), transparent 45%),
-      radial-gradient(circle at 85% 80%, rgba(28,92,58,0.35), transparent 50%),
-      linear-gradient(160deg, var(--bg-panel) 0%, #071009 100%);
+      radial-gradient(circle at 15% 20%, rgba(255,255,255,0.12), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(0,0,0,0.18), transparent 50%),
+      linear-gradient(160deg, #1f9d5c 0%, #0b4d29 100%);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -290,7 +295,7 @@
   .toggle-pw:focus-visible{ outline: 2px solid var(--green-bright); outline-offset: 1px; }
 
   select{
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238fa397' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234c6357' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
     background-repeat: no-repeat;
     background-position: right 14px center;
     padding-right: 40px;
