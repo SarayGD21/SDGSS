@@ -62,7 +62,7 @@ function scorePassword(value) {
 }
 
 const labels = ['Muy débil', 'Débil', 'Aceptable', 'Fuerte'];
-const colors = ['#ff6b6b', '#ffb85c', '#c9dc3d', '#3ddc84'];
+const colors = ['#c0362e', '#c98a00', '#7a8c00', '#15803d'];
 
 pw.addEventListener('input', () => {
   const score = pw.value.length ? Math.max(scorePassword(pw.value), 1) : 0;
@@ -107,9 +107,9 @@ function mostrarErrorGeneral(mensaje) {
     errorBanner = document.createElement('div');
     errorBanner.id = 'errorBannerRegistro';
     errorBanner.className = 'success-banner';
-    errorBanner.style.background = '#3a1414';
-    errorBanner.style.color = '#ffb4a8';
-    errorBanner.style.borderColor = '#7a2b22';
+    errorBanner.style.background = '#fdeceb';
+    errorBanner.style.color = '#8a241d';
+    errorBanner.style.borderColor = '#f1b8b3';
     successBanner.insertAdjacentElement('afterend', errorBanner);
   }
   errorBanner.textContent = mensaje;

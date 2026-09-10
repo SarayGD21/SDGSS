@@ -6,15 +6,18 @@
 <title>SGSS · Panel de la encargada</title>
 <style>
   :root{
-    --bg-black:#eef8f2; --bg-panel:#ffffff; --bg-sidebar:#eef8f2; --green-line:#cdeedd;
-    --green-bright:#15803d; --green-mid:#0f6b39; --text-main:#16241c;
-    --text-muted:#4c6357; --text-faint:#7c9488; --danger:#c0362e; --ok:#15803d;
+    --bg-black:#f2f7f4; --bg-panel:#ffffff; --bg-sidebar:#f2f7f4; --green-line:#d7ecdf;
+    --green-bright:#178a45; --green-mid:#0e6234; --green-deep:#0a4324; --text-main:#16231c;
+    --text-muted:#51635a; --text-faint:#82968a; --danger:#b3342c; --ok:#178a45;
     --radius:14px; --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif;
     --sidebar-w:240px;
+    --shadow-sm: 0 2px 10px rgba(10,67,36,0.07); --shadow-md: 0 12px 28px rgba(10,67,36,0.14);
   }
   *{ box-sizing:border-box; }
   body{ margin:0; font-family:var(--font-body); background:var(--bg-black); color:var(--text-main); }
   button{ cursor:pointer; font-family:inherit; }
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible{ outline:2.5px solid var(--green-mid); outline-offset:3px; border-radius:4px; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; } }
 
   /* ---------- Layout general ---------- */
   .app{ display:flex; min-height:100vh; }
@@ -68,7 +71,8 @@
   input{ width:100%; background:var(--bg-black); border:1.5px solid var(--green-line); border-radius:10px; padding:11px 13px; color:var(--text-main); font-family:var(--font-body); font-size:14px; outline:none; }
   input:focus{ border-color:var(--green-bright); }
   .save-row{ display:flex; align-items:center; gap:14px; margin-top:6px; }
-  .save-btn{ background:linear-gradient(180deg,var(--green-bright),var(--green-mid)); color:#06110b; border:none; padding:12px 20px; border-radius:10px; font-family:var(--font-display); font-weight:700; font-size:14px; }
+  .save-btn{ background:var(--green-mid); color:#ffffff; border:none; padding:12px 20px; border-radius:10px; font-family:var(--font-display); font-weight:700; font-size:14px; box-shadow:var(--shadow-sm); transition:background .12s ease; }
+  .save-btn:hover{ background:var(--green-deep); }
   .save-btn:disabled{ opacity:.5; cursor:not-allowed; }
   .save-msg{ font-size:13px; display:none; }
   .save-msg.show{ display:inline; }

@@ -151,7 +151,7 @@ async function cargarSolicitudesEncargada() {
   solicitudesCache = solicitudes;
 
   listaSolicitudesEncargada.innerHTML = solicitudes.map(s => `
-    <div class="solicitud-row" data-id="${s.id}" style="background:#0f1712; border:1px solid #234531; border-radius:12px; padding:14px 16px;">
+    <div class="solicitud-row" data-id="${s.id}" style="background:#ffffff; border:1px solid #cdeedd; border-radius:12px; padding:14px 16px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div>
           <strong>${escaparHtml(s.tipo)}</strong>

@@ -62,14 +62,14 @@ async function cargarDisponibles() {
   });
 
   if (vigentes.length === 0) {
-    listaDisponibles.innerHTML = '<p style="color:#8fa397; font-size:14px;">No hay alumnos disponibles en este momento.</p>';
+    listaDisponibles.innerHTML = '<p style="color:#4c6357; font-size:14px;">No hay alumnos disponibles en este momento.</p>';
     return;
   }
 
   listaDisponibles.innerHTML = vigentes.map(d => `
-    <div style="background:#0f1712; border:1px solid #234531; border-radius:12px; padding:14px 16px;">
+    <div style="background:#ffffff; border:1px solid #cdeedd; border-radius:12px; padding:14px 16px;">
       <strong>${d.nombreAlumno || 'Alumno'}</strong>
-      <div style="color:#8fa397; font-size:13px; margin-top:4px;">
+      <div style="color:#4c6357; font-size:13px; margin-top:4px;">
         ${d.fecha} · ${d.horaInicio} - ${d.horaFin}
       </div>
     </div>
@@ -113,7 +113,7 @@ async function cargarPersonal() {
   const snap = await getDocs(q);
 
   if (snap.empty) {
-    listaPersonal.innerHTML = '<p style="color:#8fa397; font-size:14px;">Aún no hay personal registrado.</p>';
+    listaPersonal.innerHTML = '<p style="color:#4c6357; font-size:14px;">Aún no hay personal registrado.</p>';
     return;
   }
 
@@ -128,11 +128,11 @@ async function cargarPersonal() {
     <div class="persona-row ${p.activo ? '' : 'inactivo'}">
       <div>
         <strong>${escaparHtml(p.nombre)}</strong>
-        <div style="color:#8fa397; font-size:13px; margin-top:2px;">
+        <div style="color:#4c6357; font-size:13px; margin-top:2px;">
           ${escaparHtml(p.correo)} · ${escaparHtml(p.area)} / ${escaparHtml(p.puesto)}
           ${p.telefono ? ' · ' + escaparHtml(p.telefono) : ''}
         </div>
-        <div style="color:${p.activo ? '#3ddc84' : '#ff6b6b'}; font-size:12px; margin-top:2px;">
+        <div style="color:${p.activo ? '#15803d' : '#c0362e'}; font-size:12px; margin-top:2px;">
           ${p.activo ? 'Activo' : 'Desactivado'}
         </div>
       </div>
